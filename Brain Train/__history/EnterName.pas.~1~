@@ -1,0 +1,57 @@
+unit EnterName;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.jpeg,
+  Vcl.ExtCtrls, TopPlayers, GameLib;
+
+type
+  TFEnterName = class(TForm)
+    ImgBackground: TImage;
+    EdtName: TEdit;
+    LPoints: TLabel;
+    LOk: TLabel;
+    procedure LOkClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  private
+    { Private declarations }
+  public
+      Points: Integer;
+      Game: TGame;
+    { Public declarations }
+  end;
+
+var
+  FEnterName: TFEnterName;
+
+implementation
+
+{$R *.dfm}
+
+uses
+   ColorGame, FruitGame;
+
+procedure TFEnterName.FormShow(Sender: TObject);
+begin
+   LPoints.Caption := IntToStr(Points);
+end;
+
+procedure TFEnterName.LOkClick(Sender: TObject);
+begin
+   //проверка   if CheckOk
+   if Game = GColor then
+   begin
+      FTop.FindPositionInTop(Points, GColor);
+      FColorGame.Close;
+   end
+   else
+   begin
+      FTop.FindPositionInTop(Points, GFruit);
+      FFruitGame.Close;
+   end;
+   FEnterName.Close;
+end;
+
+end.

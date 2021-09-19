@@ -1,0 +1,63 @@
+unit TopPlayers;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.jpeg, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.Grids, Vcl.Imaging.pngimage;
+
+type
+
+   TPlayer = record
+      Name: string[20];
+      Points: Integer;
+   end;
+
+   TGame = (GColor, GFruit);
+
+  TFTop = class(TForm)
+    ImgBackground: TImage;
+    SGTop: TStringGrid;
+    BtnBack: TImage;
+    BtnNext: TImage;
+    LTitle: TLabel;
+    procedure BtnBackClick(Sender: TObject);
+    procedure BtnNextClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    GameShow: TGame;
+  public
+    { Public declarations }
+  end;
+
+var
+  FTop: TFTop;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFTop.BtnBackClick(Sender: TObject);
+begin
+   FTop.Close;
+end;
+
+procedure TFTop.BtnNextClick(Sender: TObject);
+begin
+   if GameShow = GColor then
+   begin
+      GameShow := GFruit;
+   end
+   else
+   begin
+      GameShow := GColor;
+   end;
+end;
+
+procedure TFTop.FormCreate(Sender: TObject);
+begin
+   GameShow := GColor;
+end;
+
+end.

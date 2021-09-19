@@ -1,0 +1,17 @@
+program BrainTrain;
+
+uses
+  Vcl.Forms,
+  GameScreen in 'GameScreen.pas' {FMainMenu},
+  GameLib in 'GameLib.pas',
+  ColorGame in 'ColorGame.pas' {FColorGame};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFMainMenu, FMainMenu);
+  Application.CreateForm(TFColorGame, FColorGame);
+  Application.Run;
+end.

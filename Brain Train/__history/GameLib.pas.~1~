@@ -1,0 +1,13 @@
+unit GameLib;
+
+interface
+
+uses
+   Vcl.ExtCtrls;
+
+type
+   TTrain = array[0..5] of TImage;
+
+implementation
+
+end.

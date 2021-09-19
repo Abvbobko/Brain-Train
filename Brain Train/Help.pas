@@ -1,0 +1,79 @@
+unit Help;
+
+interface
+
+uses
+   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.pngimage, Vcl.ExtCtrls;
+
+const
+   FirstPic = 0;
+   LastPic = 11;
+
+type
+   TFHelp = class(TForm)
+      ImgSlide: TImage;
+      BtnExit: TImage;
+      BtnNext: TImage;
+      BtnPrev: TImage;
+      procedure BtnExitClick(Sender: TObject);
+      procedure FormShow(Sender: TObject);
+      procedure BtnNextClick(Sender: TObject);
+      procedure BtnPrevClick(Sender: TObject);
+   private
+      Pic: Integer;
+   public
+      { Public declarations }
+   end;
+
+var
+   FHelp: TFHelp;
+
+implementation
+
+{$R *.dfm}
+
+uses
+   GameScreen;
+
+procedure TFHelp.BtnExitClick(Sender: TObject);
+begin
+   FMainMenu.Enabled := True;
+   if FMainMenu.Train[0].Left <> Start_Point then
+      FMainMenu.TmrTrain.Enabled := True;
+   FHelp.Close;
+end;
+
+procedure TFHelp.BtnNextClick(Sender: TObject);
+begin
+   if Pic <> LastPic then
+   begin
+      Inc(Pic);
+      BtnPrev.Visible := True;
+      ImgSlide.Picture.LoadFromFile('Img\Help\' + IntToStr(Pic) + '.png');
+   end;
+   if Pic = LastPic then
+      BtnNext.Visible := False;
+end;
+
+procedure TFHelp.BtnPrevClick(Sender: TObject);
+begin
+   if Pic <> FirstPic then
+   begin
+      Dec(Pic);
+      BtnNext.Visible := True;
+      ImgSlide.Picture.LoadFromFile('Img\Help\' + IntToStr(Pic) + '.png');
+   end;
+   if Pic = FirstPic then
+      BtnPrev.Visible:= False;
+end;
+
+procedure TFHelp.FormShow(Sender: TObject);
+begin
+   Pic := 0;
+   ImgSlide.Picture.LoadFromFile('Img\Help\0.png');
+   BtnPrev.Visible := False;
+   BtnNext.Visible := True;
+end;
+
+end.

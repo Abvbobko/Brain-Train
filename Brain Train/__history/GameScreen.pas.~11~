@@ -1,0 +1,98 @@
+unit GameScreen;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.jpeg,
+  Vcl.ExtCtrls, GameLib, Vcl.Imaging.pngimage, ColorGame, TopPlayers,
+  Vcl.ComCtrls, FruitGame;
+
+type
+  TFMainMenu = class(TForm)
+    ImgBackground: TImage;
+    BClose: TButton;
+    TmrTrain: TTimer;
+    ImgMainText: TImage;
+    BGame1: TButton;
+    Button1: TButton;
+    Button2: TButton;
+    procedure BCloseClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure TmrTrainTimer(Sender: TObject);
+    procedure BGame1Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+  private
+    Train: TTrain;
+  public
+    { Public declarations }
+  end;
+
+var
+  FMainMenu: TFMainMenu;
+
+implementation
+
+const
+   N = 3;
+
+{$R *.dfm}
+
+procedure TFMainMenu.BCloseClick(Sender: TObject);
+begin
+   FMainMenu.Close;
+end;
+
+procedure TFMainMenu.BGame1Click(Sender: TObject);
+begin
+   FColorGame.Show;
+end;
+
+procedure TFMainMenu.Button1Click(Sender: TObject);
+begin
+   FTop.Show;
+end;
+
+procedure TFMainMenu.Button2Click(Sender: TObject);
+begin
+   FFruitGame.Show;
+end;
+
+procedure TFMainMenu.FormCreate(Sender: TObject);
+var
+   i : Integer;
+begin
+   for i := 0 to N do
+   begin
+      Train[i] := TImage.Create(FMainMenu);
+      with Train[i] do
+      begin
+         Parent := FMainMenu;
+         if i = 0 then
+            Picture.LoadFromFile('Img\Train\Train.bmp')
+         else
+            if i = N then
+               Picture.LoadFromFile('Img\Train\WagonEnd.bmp')
+            else
+               Picture.LoadFromFile('Img\Train\Wagon.bmp');
+         Stretch := True;
+         Top := 284;
+         Left := Distance + i * 100;
+         Train[i].Transparent := True;
+      end;
+   end;
+   TmrTrain.Enabled := True;
+end;
+
+procedure TFMainMenu.TmrTrainTimer(Sender: TObject);
+var
+   i : Integer;
+begin
+   for i := 0 to N do
+      Train[i].Left := Train[i].Left - 5;
+   if Train[0].Left = Start_Point then
+      TmrTrain.Enabled := False;
+end;
+
+end.

@@ -1,0 +1,20 @@
+unit GameLib;
+
+interface
+
+uses
+   Vcl.ExtCtrls;
+
+type
+
+   TTurn = (Player, Computer);
+
+   TGame = (GColor, GFruit);
+
+const
+   Start_Point = 90;
+   Distance = 600;
+
+implementation
+
+end.

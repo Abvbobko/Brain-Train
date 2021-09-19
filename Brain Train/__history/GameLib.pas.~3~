@@ -1,0 +1,18 @@
+unit GameLib;
+
+interface
+
+uses
+   Vcl.ExtCtrls;
+
+type
+
+   TTurn = (Player, Computer);
+
+const
+   Start_Point = 90;
+   Distance = 600;
+
+implementation
+
+end.

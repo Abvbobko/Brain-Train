@@ -1,0 +1,21 @@
+program BrainTrain;
+
+uses
+  Vcl.Forms,
+  GameScreen in 'GameScreen.pas' {FMainMenu},
+  GameLib in 'GameLib.pas',
+  ColorGame in 'ColorGame.pas' {FColorGame},
+  TopPlayers in 'TopPlayers.pas' {FTop},
+  FruitGame in 'FruitGame.pas' {FFruitGame};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFMainMenu, FMainMenu);
+  Application.CreateForm(TFColorGame, FColorGame);
+  Application.CreateForm(TFTop, FTop);
+  Application.CreateForm(TFFruitGame, FFruitGame);
+  Application.Run;
+end.

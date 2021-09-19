@@ -1,0 +1,52 @@
+unit Question;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.jpeg,
+  Vcl.ExtCtrls, FruitGame, GameScreen, ColorGame;
+
+type
+  TFQuestion = class(TForm)
+    ImgBackground: TImage;
+    LQuestion: TLabel;
+    LYes: TLabel;
+    LNo: TLabel;
+    LInfo: TLabel;
+    procedure LNoClick(Sender: TObject);
+    procedure LYesClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  private
+    { Private declarations }
+  public
+      NumbOfParentForm: Integer;
+  end;
+
+var
+  FQuestion: TFQuestion;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFQuestion.FormShow(Sender: TObject);
+begin
+   if NumbOfParentForm <> 0 then
+      LInfo.Visible := True
+   else
+      LInfo.Visible := False;
+end;
+
+procedure TFQuestion.LNoClick(Sender: TObject);
+begin
+   FQuestion.Close;
+end;
+
+procedure TFQuestion.LYesClick(Sender: TObject);
+begin
+   FQuestion.Close;
+
+end;
+
+end.

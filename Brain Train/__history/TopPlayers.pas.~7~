@@ -1,0 +1,109 @@
+unit TopPlayers;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.jpeg, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.Grids, Vcl.Imaging.pngimage;
+
+type
+
+   TPlayer = record
+      Name: string[20];
+      Points: Integer;
+   end;
+
+   TGame = (GColor, GFruit);
+
+   TTopArray = array[1..10] of TPlayer;
+
+  TFTop = class(TForm)
+    ImgBackground: TImage;
+    SGTop: TStringGrid;
+    BtnBack: TImage;
+    BtnNext: TImage;
+    LTitle: TLabel;
+    procedure BtnBackClick(Sender: TObject);
+    procedure BtnNextClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure ReadTop(Location: string; var Top: TTopArray);
+  private
+    GameShow: TGame;
+    TopColor: TTopArray;///array[1..10] of TPlayer;
+    TopFruit: TTopArray;//array[1..10] of TPlayer;
+  public
+    { Public declarations }
+  end;
+
+var
+  FTop: TFTop;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFTop.BtnBackClick(Sender: TObject);
+begin
+   FTop.Close;
+end;
+
+procedure TFTop.BtnNextClick(Sender: TObject);
+begin
+   if GameShow = GColor then
+   begin
+      GameShow := GFruit;
+   end
+   else
+   begin
+      GameShow := GColor;
+   end;
+end;
+
+procedure TFTop.ReadTop(Location: string; var Top: TTopArray);
+var
+   InputFile: File of TPlayer;
+   isCorrect: Boolean;
+   i: Integer;
+begin
+   AssignFile(InputFile, 'ColorGameFile.dat');
+   Reset(InputFile);
+//   isCorrect := False;
+   //If SeekEof(InputFile) then
+     // application.MessageBox('Файл пуст.', 'Ошибка.')
+   //else
+   //begin
+      isCorrect := True;
+      try
+         for i := 1 to 10 do
+         begin
+            Read(InputFile, TopColor[i]);
+            //SGTeam.Cells[0, i] := IntToStr(i);
+            //SGTeam.Cells[1, i] := Temp.Country;
+				//SGTeam.Cells[2, i] := Temp.Name;
+				//SGTeam.Cells[3, i] := Temp.Trainer;
+				//SGTeam.Cells[4, i] := IntToStr(Temp.Raiting);
+         end;
+      except
+         ShowMessage('Некорректные данные в файле.');
+         isCorrect := False;
+      end;
+      CloseFile(InputFile);
+ //  end;
+   if isCorrect then
+   begin
+       //////////
+   end;
+end;
+
+procedure TFTop.FormCreate(Sender: TObject);
+//var
+  // ColorFile: File of TPlayer;
+  // FruitFile: File of TPlayer;
+begin
+   GameShow := GColor;   //////////////////////////////////??????????????????????
+   ReadTop('ColorGameFile.dat', TopColor);
+   ReadTop('FruitGameFile.dat', TopFruit);
+end;
+
+end.

@@ -1,0 +1,19 @@
+unit GameLib;
+
+interface
+
+uses
+   Vcl.ExtCtrls;
+
+type
+   TTrain = array[0..5] of TImage;
+
+   TTurn = (Player, Computer);
+
+const
+   Start_Point = 130;
+   Distance = 600;
+
+implementation
+
+end.

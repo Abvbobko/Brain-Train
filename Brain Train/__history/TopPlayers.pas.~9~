@@ -1,0 +1,138 @@
+unit TopPlayers;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.jpeg, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.Grids, Vcl.Imaging.pngimage;
+
+type
+
+   TPlayer = record
+      Name: string[15];
+      Points: Integer;
+   end;
+
+   TGame = (GColor, GFruit);
+
+   TTopArray = array[1..10] of TPlayer;
+
+  TFTop = class(TForm)
+    ImgBackground: TImage;
+    SGTop: TStringGrid;
+    BtnBack: TImage;
+    BtnNext: TImage;
+    LTitle: TLabel;
+    procedure BtnBackClick(Sender: TObject);
+    procedure BtnNextClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure ReadTop(Location: string; var Top: TTopArray);
+    procedure FillTable(Top: TTopArray);
+    procedure FormShow(Sender: TObject);
+  private
+    GameShow: TGame;
+    TopColor: TTopArray;
+    TopFruit: TTopArray;
+  public
+    { Public declarations }
+  end;
+
+var
+  FTop: TFTop;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFTop.BtnBackClick(Sender: TObject);
+begin
+   FTop.Close;
+end;
+
+procedure TFTop.BtnNextClick(Sender: TObject);
+begin
+   if GameShow = GColor then
+   begin
+      GameShow := GFruit;
+      FillTable(TopFruit);
+      LTitle.Caption := 'Игра "Fruits"';
+   end
+   else
+   begin
+      GameShow := GColor;
+      FillTable(TopColor);
+      LTitle.Caption := 'Игра "Colors"';
+   end;
+end;
+
+procedure TFTop.ReadTop(Location: string; var Top: TTopArray);
+var
+   InputFile: File of TPlayer;
+   isCorrect: Boolean;
+   i: Integer;
+   EmptyPlayer: TPlayer;
+begin
+   repeat
+      AssignFile(InputFile, Location);
+      Reset(InputFile);
+      isCorrect := True;
+      if FileSize(InputFile) = 0 then
+      begin
+         EmptyPlayer.Name := '-----';
+         EmptyPlayer.Points := 0;
+         for i := 1 to 10 do
+            Write(InputFile, EmptyPlayer);
+      end
+      else
+      begin
+         try
+            for i := 1 to 10 do
+               Read(InputFile, Top[i]);
+         except
+            ShowMessage('Некорректные данные в файле.');
+            isCorrect := False;
+         end;
+         CloseFile(InputFile);
+      end;
+      if not isCorrect then
+      begin
+         EmptyPlayer.Name := '-----';
+         EmptyPlayer.Points := 0;
+         for i := 1 to 10 do
+            Write(InputFile, EmptyPlayer);
+      end;
+   until isCorrect;
+end;
+
+procedure TFTop.FillTable(Top: TTopArray);
+var
+   i: Integer;
+begin
+   for i := 1 to 10 do
+   begin
+      SGTop.Cells[1, i] := Top[i].Name;
+      SGTop.Cells[2, i] := IntToStr(Top[i].Points);
+   end;
+end;
+
+procedure TFTop.FormCreate(Sender: TObject);
+var
+   i: Integer;
+begin
+   SGTop.Cells[0, 0] := '№:';
+   SGTop.Cells[1, 0] := 'Имя игрока:';
+   SGTop.Cells[2, 0] := 'Очки:';
+   for i := 1 to 10 do
+      SGTop.Cells[0, i] := IntToStr(i) + '.';
+end;
+
+procedure TFTop.FormShow(Sender: TObject);
+begin
+   ReadTop('FruitGameFile.dat', TopFruit);
+   ReadTop('ColorGameFile.dat', TopColor);
+   GameShow := GColor;
+   FillTable(TopColor);
+end;
+
+end.

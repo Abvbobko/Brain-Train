@@ -1,0 +1,404 @@
+unit FruitGame;
+
+interface
+
+uses
+   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Imaging.jpeg, Vcl.ExtCtrls,
+   Vcl.Grids, Vcl.StdCtrls, Vcl.Samples.Gauges, Vcl.ComCtrls, Vcl.Imaging.pngimage,
+   Question, GameLib, GameOver;
+
+const
+   FruitN = 17;
+   CardsStartX = 165;
+   CardsStartY = 15;
+   EmptyCell = 20;
+   CardSize = 70;
+   MarginForError = 30;
+   EasyModeStart = 0;
+   EasyModeEnd = 2;
+   MediumModeStart = 3;
+   MediumModeEnd = 6;
+
+type
+   TFirstOpenCard = record
+      X, Y: Integer;
+      FruitNum: Integer;
+   end;
+
+   TCellCoordinate = record
+      X, Y: Integer;
+   end;
+
+   TFFruitGame = class(TForm)
+      ImgFruitGameBackground: TImage;
+      Cards: TImage;
+      BtnExit: TImage;
+      LCountdown: TLabel;
+      LPointCnt: TLabel;
+      LTimeToRemember: TLabel;
+      LWellDone: TLabel;
+      LErrors: TLabel;
+      LErrCnt: TLabel;
+      TmrCountdown: TTimer;
+      TmrToRemember: TTimer;
+      TmrWaitCheck: TTimer;
+      procedure FormCreate(Sender: TObject);
+      procedure FormShow(Sender: TObject);
+      procedure TmrCountdownTimer(Sender: TObject);
+      procedure FormClose(Sender: TObject; var Action: TCloseAction);
+      procedure TmrToRememberTimer(Sender: TObject);
+      procedure CardsMouseDown(Sender: TObject; Button: TMouseButton;
+         Shift: TShiftState; X, Y: Integer);
+      procedure TmrWaitCheckTimer(Sender: TObject);
+      procedure BtnExitClick(Sender: TObject);
+   private
+      Fruit: array[0..FruitN] of TBitmap;
+      CloseCard: TBitmap;
+      DeleteCard: TBitmap;
+      TableSize: Integer;
+      FruitTable: TTable;
+      Pairs: array of Integer;
+      Countdown: Integer;
+      CountdownForMemory: Integer;
+      CardOpen: Integer;
+      FirstOpenCard: TFirstOpenCard;
+      CellCoordinate: TCellCoordinate;
+      Errors: Integer;
+      procedure DrawTable(OffsetX, OffsetY: Integer);
+      procedure GenerateTable;
+      procedure StartLevel(LengthOfSide, OffSetX, OffsetY: Integer);
+      procedure CloseTable;
+      procedure DeletePair(i, j: Integer);
+      procedure ClosePair(i, j: Integer);
+      procedure ClearTable;
+      procedure EndOfGame;
+      procedure NextLevel;
+      function GenNum(FruitNum: Integer): Integer;
+      function EmptyTable: Boolean;
+      function EqualFruits(i, j: Integer): Boolean;
+   public
+      Points: Integer;
+   end;
+
+var
+   FFruitGame: TFFruitGame;
+
+implementation
+
+{$R *.dfm}
+
+uses
+   GameScreen, TopPlayers, EnterName;
+
+procedure TFFruitGame.EndOfGame;
+begin
+   FFruitGame.Enabled := False;
+   if Points > FTop.TopFruit[10].Points then
+   begin
+      FEnterName.Points := Points;
+      FEnterName.Game := GFruit;
+      FEnterName.Show;
+   end
+   else
+      FGameOver.Show;
+end;
+
+procedure TFFruitGame.ClearTable;
+var
+   i, j: Integer;
+   X, Y: Integer;
+begin
+   X := 0;
+   Y := 0;
+   for i := 0 to (TableSize - 1) do
+   begin
+      for j := 0 to (TableSize - 1) do
+      begin
+         Cards.Canvas.Draw(X, Y, DeleteCard);
+         X := X + 70;
+      end;
+      X := 0;
+      Y := Y + 70;
+   end;
+end;
+
+function TFFruitGame.EmptyTable: Boolean;
+var
+   i, j: Integer;
+begin
+   EmptyTable := True;
+   for i := 0 to (TableSize - 1) do
+      for j := 0 to (TableSize - 1) do
+         if FruitTable[i, j] <> 20 then
+            EmptyTable := False;
+end;
+
+procedure TFFruitGame.ClosePair(i, j: Integer);
+begin
+   Cards.Canvas.Draw(i * CardSize, j * CardSize, CloseCard);
+   Cards.Canvas.Draw(FirstOpenCard.X * CardSize, FirstOpenCard.Y * CardSize, CloseCard);
+   Inc(Errors);
+   LErrCnt.Caption := IntToStr(Errors);
+   if Errors = MarginForError + 1 then
+      EndOfGame;
+end;
+
+procedure TFFruitGame.DeletePair(i, j: Integer);
+begin
+   FruitTable[i, j] := EmptyCell;
+   FruitTable[FirstOpenCard.X, FirstOpenCard.Y] := EmptyCell;
+   Cards.Canvas.Draw(i * CardSize, j * CardSize, DeleteCard);
+   Cards.Canvas.Draw(FirstOpenCard.X * CardSize, FirstOpenCard.Y * CardSize, DeleteCard);
+end;
+
+function TFFruitGame.EqualFruits(i, j: Integer): Boolean;
+begin
+   if FruitTable[i, j] = FirstOpenCard.FruitNum then
+      EqualFruits := True
+   else
+      EqualFruits := False;
+end;
+
+procedure TFFruitGame.TmrWaitCheckTimer(Sender: TObject);
+begin
+   if (CardOpen = 2) and ((FirstOpenCard.X <> CellCoordinate.X)
+      or (FirstOpenCard.Y <> CellCoordinate.Y)) then
+   begin
+      if EqualFruits(CellCoordinate.X, CellCoordinate.Y) then
+         DeletePair(CellCoordinate.X, CellCoordinate.Y)
+      else
+         ClosePair(CellCoordinate.X, CellCoordinate.Y);
+      CardOpen := 0;
+   end
+   else
+      if CardOpen > 1 then
+         Dec(CardOpen);
+   TmrWaitCheck.Enabled:= False;
+   if EmptyTable then
+   begin
+      Inc(Points);
+      LPointCnt.Caption := IntToStr(Points);
+      LWellDone.Visible := True;
+      NextLevel;
+   end;
+end;
+
+procedure TFFruitGame.CardsMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+   if CardOpen < 2 then
+   begin
+      CellCoordinate.X := X div CardSize;
+      CellCoordinate.Y := Y div CardSize;
+      if (CellCoordinate.X < TableSize) and (CellCoordinate.Y < TableSize) then
+         if FruitTable[CellCoordinate.X, CellCoordinate.Y] <> EmptyCell then
+         begin
+            Inc(CardOpen);
+            Cards.Canvas.Draw(CellCoordinate.X * CardSize, CellCoordinate.Y * CardSize,
+                Fruit[FruitTable[CellCoordinate.X, CellCoordinate.Y]]);
+            if CardOpen = 1 then
+            begin
+               FirstOpenCard.FruitNum := FruitTable[CellCoordinate.X, CellCoordinate.Y];
+               FirstOpenCard.X := CellCoordinate.X;
+               FirstOpenCard.Y := CellCoordinate.Y;
+            end;
+            TmrWaitCheck.Enabled := True;
+         end;
+   end;
+end;
+
+procedure TFFruitGame.CloseTable;
+var
+   i, j: Integer;
+   X, Y: Integer;
+begin
+   X := 0;
+   Y := 0;
+   for i := 0 to (TableSize - 1) do
+   begin
+      for j := 0 to (TableSize - 1) do
+      begin
+         Cards.Canvas.Draw(X, Y, CloseCard);
+         X := X + 70;
+      end;
+      X := 0;
+      Y := Y + 70;
+   end;
+end;
+
+procedure TFFruitGame.BtnExitClick(Sender: TObject);
+begin
+   TmrToRemember.Enabled := False;
+   FFruitGame.Enabled := False;
+   FQuestion.NumbOfParentForm := 2;
+   FQuestion.Show;
+end;
+
+procedure TFFruitGame.FormCreate(Sender: TObject);
+var
+   i: Integer;
+begin
+   for i := 0 to FruitN do
+   begin
+      Fruit[i] := TBitmap.Create;
+      Fruit[i].LoadFromFile('Img\FruitGame\' + IntToStr(i) + '.bmp');
+   end;
+   CloseCard := TBitmap.Create;
+   CloseCard.LoadFromFile('Img\FruitGame\CloseCard.bmp');
+   DeleteCard := TBitmap.Create;
+   DeleteCard.LoadFromFile('Img\FruitGame\DeleteCard.bmp');
+end;
+
+procedure TFFruitGame.DrawTable(OffsetX, OffsetY: Integer);
+var
+   i, j: Integer;
+   X, Y: Integer;
+begin
+   X := 0;
+   Y := 0;
+   Cards.Top := CardsStartY + OffSetY;
+   Cards.Left := CardsStartX + OffSetX;
+   for i := 0 to (TableSize - 1) do
+   begin
+      for j := 0 to (TableSize - 1) do
+      begin
+         Cards.Canvas.Draw(X, Y, Fruit[FruitTable[i, j]]);
+         Y := Y + 70;
+      end;
+      Y := 0;
+      X := X + 70;
+   end;
+end;
+
+function TFFruitGame.GenNum(FruitNum: Integer): Integer;
+var
+   GenFruit: Integer;
+   Loop: Boolean;
+begin
+   Loop := True;
+   while Loop do
+   begin
+      GenFruit := Random(FruitNum);
+      if Pairs[GenFruit] < 2 then
+      begin
+         Inc(Pairs[GenFruit]);
+         GenNum := GenFruit;
+         Loop := False;
+      end
+   end;
+end;
+
+procedure TFFruitGame.TmrCountdownTimer(Sender: TObject);
+begin
+   Dec(Countdown);
+   LCountdown.Caption := IntToStr(Countdown);
+   if Countdown = 0 then
+   begin
+      TmrCountdown.Enabled := False;
+      LCountdown.Visible := False;
+      FFruitGame.Enabled := True;
+      LPointCnt.Visible := True;
+      LErrCnt.Visible := True;
+      LErrors.Visible := True;
+      LTimeToRemember.Visible := True;
+      TmrToRemember.Enabled := True;
+   end;
+end;
+
+procedure TFFruitGame.TmrToRememberTimer(Sender: TObject);
+begin
+   LWellDone.Visible := False;
+   Dec(CountdownForMemory);
+   LTimeToRemember.Caption := IntToStr(CountdownForMemory);
+   if CountdownForMemory = 0 then
+   begin
+      TmrToRemember.Enabled := False;
+      CountdownForMemory := 3;
+      CloseTable;
+      LTimeToRemember.Visible := False;
+      Cards.Enabled := True;
+   end;
+end;
+
+procedure TFFruitGame.GenerateTable;
+var
+   i, j: Integer;
+   FruitNum: Integer;
+begin
+   Randomize;
+   FruitNum := (TableSize * TableSize) div 2;
+   SetLength(Pairs, FruitNum);
+   for i := 0 to High(Pairs) do
+      Pairs[i] := 0;
+   SetLength(FruitTable, TableSize, TableSize);
+   for i := 0 to High(FruitTable) do
+      for j := 0 to High(FruitTable) do
+        FruitTable[i, j] :=  GenNum(FruitNum);
+end;
+
+procedure TFFruitGame.StartLevel(LengthOfSide, OffSetX, OffsetY: Integer);
+begin
+   TableSize := LengthOfSide;
+   GenerateTable;
+   DrawTable(OffSetX, OffsetY);
+end;
+
+procedure TFFruitGame.NextLevel;
+begin
+   case Points of
+      EasyModeStart..EasyModeEnd:
+         begin
+            StartLevel(2, 140, 140);
+            CountdownForMemory := 3;
+         end;
+      MediumModeStart..MediumModeEnd:
+         begin
+            StartLevel(4, 70, 70);
+            CountdownForMemory := 5;
+         end
+      else
+      begin
+         StartLevel(6, 0, 0);
+         CountdownForMemory := 15;
+      end;
+   end;
+   CardOpen := 0;
+   LTimeToRemember.Caption := IntToStr(CountdownForMemory);
+   Cards.Enabled := False;
+   LTimeToRemember.Visible := True;
+   TmrToRemember.Enabled := True;
+end;
+
+procedure TFFruitGame.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+   Cards.Top := CardsStartY;
+   Cards.Left := CardsStartX;
+   LPointCnt.Visible := False;
+   LErrors.Visible := False;
+   LErrCnt.Visible := False;
+   LTimeToRemember.Visible := False;
+   TmrToRemember.Enabled := False;
+end;
+
+procedure TFFruitGame.FormShow(Sender: TObject);
+begin
+   TableSize := 6;
+   ClearTable;
+   StartLevel(2, 140, 140);
+   Points := 0;
+   Errors := 0;
+   CountdownForMemory := 3;
+   CardOpen := 0;
+   LWellDone.Visible := False;
+   LPointCnt.Caption := '0';
+   LErrCnt.Caption := '0';
+   LTimeToRemember.Caption := '3';
+   LCountdown.Visible := True;
+   FFruitGame.Enabled := False;
+   Countdown := 3;
+   LCountdown.Caption := IntToStr(Countdown);
+   TmrCountdown.Enabled := True;
+end;
+
+end.

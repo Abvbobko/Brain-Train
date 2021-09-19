@@ -1,0 +1,15 @@
+program BrainTrain;
+
+uses
+  Vcl.Forms,
+  GameScreen in 'GameScreen.pas' {FMainMenu},
+  GameLib in 'GameLib.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFMainMenu, FMainMenu);
+  Application.Run;
+end.
